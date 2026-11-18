@@ -1,0 +1,5 @@
+# Downloaded by `helm dependency build`; the version is pinned in Chart.lock.
+deployer/chart/spacelift-mp/charts/
+# Output of `make template`.
+build/
+__pycache__/

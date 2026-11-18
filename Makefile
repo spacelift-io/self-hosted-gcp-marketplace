@@ -1,0 +1,56 @@
+# Local build and checks for the Marketplace deployer.
+#
+#   make test     unit tests, then render the chart with and without a license
+#   make build    build the deployer image for linux/amd64
+#
+# Needs: helm 4, python3 with PyYAML, docker (for build).
+
+CHART    := deployer/chart/spacelift-mp
+VERSION  ?= $(shell sed -n 's/^version: //p' $(CHART)/Chart.yaml)
+REGISTRY ?= us-docker.pkg.dev/spacelift-public/spacelift-gcp-kubernetes-byol
+DEPLOYER_IMAGE ?= $(REGISTRY)/deployer:$(VERSION)
+PYTHON   ?= python3
+BUILD    := build
+
+.PHONY: test unit deps lint template build
+
+test: unit lint template
+
+unit:
+	cd deployer/bin && $(PYTHON) -m unittest spacelift_mp_test.py
+
+deps:
+	helm dependency build $(CHART)
+
+# Renders the chart the way deploy.sh calls Helm: the form values, then the
+# values spacelift_mp.py makes from the form.
+$(BUILD)/%.yaml: deployer/test/form-%.yaml deps
+	@mkdir -p $(BUILD)
+	$(PYTHON) deployer/bin/spacelift_mp.py values --form $< > $(BUILD)/chart-values-$*.yaml
+	helm template spacelift $(CHART) --namespace spacelift \
+		--values $< --values $(BUILD)/chart-values-$*.yaml > $@
+
+lint: deps
+	@mkdir -p $(BUILD)
+	$(PYTHON) deployer/bin/spacelift_mp.py values --form deployer/test/form-full.yaml > $(BUILD)/chart-values-lint.yaml
+	helm lint $(CHART) --namespace spacelift \
+		--values deployer/test/form-full.yaml --values $(BUILD)/chart-values-lint.yaml
+
+template: $(BUILD)/full.yaml $(BUILD)/placeholder.yaml
+	@echo "Without a license: only the Application and the placeholder ConfigMap."
+	@test "$$(grep -c '^kind:' $(BUILD)/placeholder.yaml)" = 2
+	@grep -q '^kind: ConfigMap' $(BUILD)/placeholder.yaml
+	@! grep -q 'oci.spacelift.io' $(BUILD)/placeholder.yaml
+	@echo "  ok"
+	@echo "With a license: no ServiceAccount is created, the pods use the one from the form."
+	@! grep -q '^kind: ServiceAccount' $(BUILD)/full.yaml
+	@test "$$(grep -c 'serviceAccountName: spacelift-backend' $(BUILD)/full.yaml)" -ge 2
+	@grep -q 'name: spacelift-registry' $(BUILD)/full.yaml
+	@echo "  ok"
+
+build:
+	docker buildx build --platform linux/amd64 \
+		--build-arg VERSION=$(VERSION) \
+		--file deployer/Dockerfile \
+		--tag $(DEPLOYER_IMAGE) \
+		--load .

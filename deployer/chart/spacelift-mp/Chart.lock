@@ -1,0 +1,6 @@
+dependencies:
+- name: spacelift-self-hosted
+  repository: https://downloads.spacelift.io/helm
+  version: 7.2.0
+digest: sha256:e57199d88c70966deb3b6bd35c3a31b94436a037076e36db34eac36207f3d02f
+generated: "2026-11-18T16:09:36.282551Z"
