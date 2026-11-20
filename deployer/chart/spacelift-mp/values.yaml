@@ -1,0 +1,101 @@
+# Values of the spacelift-mp chart.
+#
+# The top-level keys below (license, registry, domain, ...) are the fields of
+# the Marketplace install form (deployer/schema.yaml). The deployer passes the
+# form as a values file, plus a second file that maps the form to the
+# spacelift-self-hosted chart (deployer/bin/spacelift_mp.py).
+#
+# Everything under `spacelift:` goes to the spacelift-self-hosted chart. See
+# its values: https://github.com/spacelift-io/spacelift-self-hosted-helm-chart
+
+license:
+  token: ""
+
+registry:
+  server: oci.spacelift.io
+  username: spacelift
+  password: ""
+  # Name of the image pull secret this chart creates from the values above.
+  pullSecretName: spacelift-registry
+
+domain: ""
+
+encryption:
+  rsaPrivateKey: ""
+
+database:
+  connectionName: ""
+  name: ""
+  user: ""
+
+storage:
+  buckets:
+    deliveries: ""
+    largeQueueMessages: ""
+    metadata: ""
+    modules: ""
+    policyInputs: ""
+    runLogs: ""
+    runObservability: ""
+    states: ""
+    uploads: ""
+    userUploadedWorkspaces: ""
+    workspace: ""
+
+ingress:
+  ipv4AddressName: ""
+  ipv6AddressName: ""
+  clusterIssuer: letsencrypt-prod
+
+admin:
+  username: ""
+  password: ""
+
+# Concurrency of the drain queues, per drain pod.
+drain:
+  concurrency:
+    asyncJobs: 1
+    asyncJobsFifo: 1
+    cronjobs: 1
+    dlq: 1
+    dlqFifo: 1
+    events: 1
+    iot: 1
+    webhooks: 1
+
+# Values of the image at the root of the Marketplace repository, filled in by
+# Marketplace. Not used: that image runs nothing.
+rootImage:
+  repository: ""
+  tag: ""
+
+# Set by the deployer: false when no license is given. Then only a placeholder
+# is installed instead of Spacelift.
+installSpacelift: true
+
+spacelift:
+  shared:
+    secretRef: spacelift-shared
+    imagePullSecrets:
+      - name: spacelift-registry
+    launcherImage:
+      enabled: true
+
+  server:
+    secretRef: spacelift-server
+
+  drain:
+    secretRef: spacelift-drain
+
+  # Marketplace creates or picks the service account (the serviceAccount
+  # field of the form); the chart must not create one.
+  serviceAccount:
+    create: false
+
+  cloudSqlProxy:
+    enabled: true
+    quiet: true
+
+  ingressV6:
+    annotations:
+      acme.cert-manager.io/http01-edit-in-place: "true"

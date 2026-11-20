@@ -1,0 +1,21 @@
+Third-party software in this image
+==================================
+
+This image is built on Google's Cloud Marketplace deployer image
+(gcr.io/cloud-marketplace-tools/k8s/deployer_helm), which is based on
+Ubuntu 22.04. The licences of the Ubuntu packages are in /usr/share/doc.
+
+The following tools are added to the image or come with the base image
+without their licence text:
+
+- Helm (https://github.com/helm/helm)
+  Licence: Apache License 2.0
+  Full text: /usr/share/doc/spacelift-mp/Apache-2.0.txt
+
+- kubectl (https://github.com/kubernetes/kubernetes)
+  Licence: Apache License 2.0
+  Full text: /usr/share/doc/spacelift-mp/Apache-2.0.txt
+
+- Google Cloud Marketplace tools (https://github.com/GoogleCloudPlatform/marketplace-k8s-app-tools)
+  Licence: Apache License 2.0
+  Full text: /usr/share/doc/spacelift-mp/Apache-2.0.txt

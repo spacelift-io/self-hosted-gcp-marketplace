@@ -1,0 +1,199 @@
+# The install form of the Marketplace listing, and the metadata of this release.
+# Reference: https://github.com/GoogleCloudPlatform/marketplace-k8s-app-tools/blob/master/docs/schema.md
+#
+# Most values come from the outputs of the Spacelift Terraform module for GCP
+# (terraform-google-spacelift-selfhosted), which the customer runs before the
+# install. The install guide maps each output to its field.
+
+x-google-marketplace:
+  schemaVersion: v2
+  applicationApiVersion: v1beta1
+  # Replaced with the release version when the image is built (see Makefile).
+  publishedVersion: "__VERSION__"
+  publishedVersionMetadata:
+    releaseNote: >-
+      Spacelift Self-Hosted __VERSION__.
+    recommended: true
+  managedUpdates:
+    kalmSupported: false
+
+  images:
+    # The image at the root of the repository. It runs nothing: the Spacelift
+    # images are pulled from oci.spacelift.io with the customer's credentials.
+    '':
+      properties:
+        rootImage.repository:
+          type: REPO_WITH_REGISTRY
+        rootImage.tag:
+          type: TAG
+
+  clusterConstraints:
+    assistedClusterCreation:
+      type: DISABLED
+      creationGuidance: >-
+        Create the cluster and the cloud resources (Cloud SQL, Cloud Storage
+        buckets, IP addresses) with the Spacelift Terraform module first, then
+        pick that cluster here. See the install guide.
+
+properties:
+  name:
+    type: string
+    x-google-marketplace:
+      type: NAME
+
+  namespace:
+    type: string
+    x-google-marketplace:
+      type: NAMESPACE
+
+  serviceAccount:
+    type: string
+    title: Kubernetes service account
+    description: >-
+      The service account that runs Spacelift. Create it before the install
+      and annotate it for Workload Identity with the Google service account
+      from the Terraform module (see the install guide).
+    x-google-marketplace:
+      type: SERVICE_ACCOUNT
+      serviceAccount:
+        description: >-
+          Runs the Spacelift server and drain. It needs no Kubernetes
+          permissions. It reaches Cloud SQL and Cloud Storage through Workload
+          Identity.
+        roles: []
+
+  license.token:
+    type: string
+    title: Spacelift license
+    description: >-
+      Your Spacelift Self-Hosted license. Without a license, only a
+      placeholder is installed and Spacelift does not start.
+    x-google-marketplace:
+      type: MASKED_FIELD
+
+  registry.username:
+    type: string
+    title: Registry username
+    description: Username for oci.spacelift.io, from Spacelift together with the license.
+    default: spacelift
+
+  registry.password:
+    type: string
+    title: Registry password
+    description: Password for oci.spacelift.io, from Spacelift together with the license.
+    x-google-marketplace:
+      type: MASKED_FIELD
+
+  domain:
+    type: string
+    title: Spacelift domain
+    description: The domain Spacelift is served on, without https:// (for example spacelift.example.com).
+
+  encryption.rsaPrivateKey:
+    type: string
+    title: Encryption key
+    description: The base64-encoded RSA private key Spacelift uses to encrypt data in the database.
+    x-google-marketplace:
+      type: MASKED_FIELD
+
+  database.connectionName:
+    type: string
+    title: Cloud SQL connection name
+    description: Terraform output db_connection_name.
+
+  database.name:
+    type: string
+    title: Database name
+    description: Terraform output db_database_name.
+
+  database.user:
+    type: string
+    title: Database user
+    description: The IAM database user (the email of the Google service account from the Terraform module).
+
+  storage.buckets.deliveries:
+    type: string
+    title: Bucket for deliveries
+  storage.buckets.largeQueueMessages:
+    type: string
+    title: Bucket for large queue messages
+  storage.buckets.metadata:
+    type: string
+    title: Bucket for metadata
+  storage.buckets.modules:
+    type: string
+    title: Bucket for modules
+  storage.buckets.policyInputs:
+    type: string
+    title: Bucket for policy inputs
+  storage.buckets.runLogs:
+    type: string
+    title: Bucket for run logs
+  storage.buckets.runObservability:
+    type: string
+    title: Bucket for run observability
+  storage.buckets.states:
+    type: string
+    title: Bucket for states
+  storage.buckets.uploads:
+    type: string
+    title: Bucket for uploads
+  storage.buckets.userUploadedWorkspaces:
+    type: string
+    title: Bucket for user-uploaded workspaces
+  storage.buckets.workspace:
+    type: string
+    title: Bucket for workspaces
+
+  ingress.ipv4AddressName:
+    type: string
+    title: IPv4 address name
+    description: Name of the global static IPv4 address for the load balancer (Terraform output gke_public_v4_name).
+
+  ingress.ipv6AddressName:
+    type: string
+    title: IPv6 address name
+    description: Name of the global static IPv6 address for the load balancer (Terraform output gke_public_v6_name).
+
+  ingress.clusterIssuer:
+    type: string
+    title: cert-manager ClusterIssuer
+    description: >-
+      The cert-manager ClusterIssuer that issues the TLS certificate. Leave it
+      empty if you manage the certificate in another way.
+    default: letsencrypt-prod
+
+  admin.username:
+    type: string
+    title: Admin username (optional)
+    description: Creates an admin login for the first sign-in. Leave empty to set up SSO instead.
+    default: ""
+
+  admin.password:
+    type: string
+    title: Admin password (optional)
+    default: ""
+    x-google-marketplace:
+      type: MASKED_FIELD
+
+required:
+  - name
+  - namespace
+  - serviceAccount
+  - domain
+  - database.connectionName
+  - database.name
+  - database.user
+  - storage.buckets.deliveries
+  - storage.buckets.largeQueueMessages
+  - storage.buckets.metadata
+  - storage.buckets.modules
+  - storage.buckets.policyInputs
+  - storage.buckets.runLogs
+  - storage.buckets.runObservability
+  - storage.buckets.states
+  - storage.buckets.uploads
+  - storage.buckets.userUploadedWorkspaces
+  - storage.buckets.workspace
+  - ingress.ipv4AddressName
+  - ingress.ipv6AddressName

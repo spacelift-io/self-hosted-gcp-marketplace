@@ -1,0 +1,4 @@
+.git
+build/
+deployer/chart/spacelift-mp/charts/
+**/__pycache__/
