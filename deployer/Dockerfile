@@ -28,9 +28,13 @@ COPY deployer/THIRD_PARTY_NOTICES /usr/share/doc/spacelift-mp/THIRD_PARTY_NOTICE
 # The wrapper chart with its dependency (the spacelift-self-hosted chart)
 # vendored in, so the install doesn't download anything from a Helm repo.
 COPY deployer/chart/spacelift-mp /data/chart/spacelift-mp
+# Temporary, see the script: allows `global` in the dependency's values schema.
+COPY deployer/hack/allow-global-in-chart-schema.py /tmp/allow-global-in-chart-schema.py
 RUN helm repo add spacelift https://downloads.spacelift.io/helm \
     && helm dependency build /data/chart/spacelift-mp \
-    && helm repo remove spacelift
+    && helm repo remove spacelift \
+    && python3 /tmp/allow-global-in-chart-schema.py /data/chart/spacelift-mp/charts/spacelift-self-hosted-*.tgz \
+    && rm /tmp/allow-global-in-chart-schema.py
 
 # The install form. The release version is filled in at build time.
 ARG VERSION

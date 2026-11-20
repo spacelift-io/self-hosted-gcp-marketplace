@@ -19,8 +19,10 @@ test: unit lint template
 unit:
 	cd deployer/bin && $(PYTHON) -m unittest spacelift_mp_test.py
 
+# The second line is temporary, see the script.
 deps:
 	helm dependency build $(CHART)
+	$(PYTHON) deployer/hack/allow-global-in-chart-schema.py $(CHART)/charts/spacelift-self-hosted-*.tgz
 
 # Renders the chart the way deploy.sh calls Helm: the form values, then the
 # values spacelift_mp.py makes from the form.

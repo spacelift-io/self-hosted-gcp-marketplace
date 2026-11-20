@@ -24,6 +24,7 @@ deployer/
   bin/spacelift_mp.py    maps the form to chart values; blocks downgrades
   chart/spacelift-mp/    wrapper chart around spacelift-self-hosted
   test/                  install forms with fake values for local checks
+  hack/                  temporary build fixes, each one says when to remove it
 ```
 
 ## Development
