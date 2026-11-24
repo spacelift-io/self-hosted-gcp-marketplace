@@ -38,6 +38,9 @@ def chart_values(form):
         # No license: install only the placeholder.
         return {"installSpacelift": False}
 
+    name = get(form, "name")
+    if not name:
+        raise ValueError("the form field 'name' is empty")
     service_account = get(form, "serviceAccount")
     if not service_account:
         raise ValueError("the form field 'serviceAccount' is empty")
@@ -54,6 +57,11 @@ def chart_values(form):
     return {
         "installSpacelift": True,
         "spacelift": {
+            # Name the chart's objects after the install: <name>-server,
+            # <name>-mqtt, ... Without it the chart adds "-spacelift" to any
+            # name that doesn't contain "spacelift", and the MQTT address in
+            # the spacelift-shared Secret would point to a missing Service.
+            "fullnameOverride": name,
             "serviceAccount": {"name": service_account},
             "shared": {"serverHostname": get(form, "domain")},
             "cloudSqlProxy": {"dbConnectionName": get(form, "database.connectionName")},

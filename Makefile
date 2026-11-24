@@ -29,7 +29,7 @@ deps:
 $(BUILD)/%.yaml: deployer/test/form-%.yaml deps
 	@mkdir -p $(BUILD)
 	$(PYTHON) deployer/bin/spacelift_mp.py values --form $< > $(BUILD)/chart-values-$*.yaml
-	helm template spacelift $(CHART) --namespace spacelift \
+	helm template $$(sed -n 's/^name: //p' $<) $(CHART) --namespace $$(sed -n 's/^namespace: //p' $<) \
 		--values $< --values $(BUILD)/chart-values-$*.yaml > $@
 
 lint: deps
@@ -38,17 +38,16 @@ lint: deps
 	helm lint $(CHART) --namespace spacelift \
 		--values deployer/test/form-full.yaml --values $(BUILD)/chart-values-lint.yaml
 
-template: $(BUILD)/full.yaml $(BUILD)/placeholder.yaml
+template: $(BUILD)/full.yaml $(BUILD)/renamed.yaml $(BUILD)/placeholder.yaml
 	@echo "Without a license: only the Application and the placeholder ConfigMap."
 	@test "$$(grep -c '^kind:' $(BUILD)/placeholder.yaml)" = 2
 	@grep -q '^kind: ConfigMap' $(BUILD)/placeholder.yaml
 	@! grep -q 'oci.spacelift.io' $(BUILD)/placeholder.yaml
 	@echo "  ok"
-	@echo "With a license: no ServiceAccount is created, the pods use the one from the form."
-	@! grep -q '^kind: ServiceAccount' $(BUILD)/full.yaml
-	@test "$$(grep -c 'serviceAccountName: spacelift-backend' $(BUILD)/full.yaml)" -ge 2
-	@grep -q 'name: spacelift-registry' $(BUILD)/full.yaml
-	@echo "  ok"
+	@echo "With a license:"
+	@$(PYTHON) deployer/test/check_render.py --form deployer/test/form-full.yaml --rendered $(BUILD)/full.yaml
+	@echo "With a license, under a name without \"spacelift\" in it:"
+	@$(PYTHON) deployer/test/check_render.py --form deployer/test/form-renamed.yaml --rendered $(BUILD)/renamed.yaml
 
 build:
 	docker buildx build --platform linux/amd64 \

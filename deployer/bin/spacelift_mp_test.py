@@ -27,6 +27,7 @@ class ChartValuesTest(unittest.TestCase):
         self.assertTrue(result["installSpacelift"])
         values = result["spacelift"]
         self.assertEqual(values["serviceAccount"], {"name": "spacelift-backend"})
+        self.assertEqual(values["fullnameOverride"], "spacelift")
         self.assertEqual(values["shared"], {"serverHostname": "spacelift.example.com"})
         self.assertEqual(
             values["cloudSqlProxy"], {"dbConnectionName": "test-project:us-central1:spacelift"}
@@ -48,10 +49,16 @@ class ChartValuesTest(unittest.TestCase):
         self.assertNotIn(mp.CLUSTER_ISSUER_ANNOTATION, annotations)
         self.assertIsNone(annotations[mp.EDIT_IN_PLACE_ANNOTATION])
 
-    def test_empty_service_account_fails(self):
-        form = dict(FULL_FORM, serviceAccount="")
-        with self.assertRaises(ValueError):
-            mp.chart_values(form)
+    def test_chart_objects_follow_the_install_name(self):
+        form = dict(FULL_FORM, name="sl-prod")
+        self.assertEqual(mp.chart_values(form)["spacelift"]["fullnameOverride"], "sl-prod")
+
+    def test_empty_required_fields_fail(self):
+        for field in ["name", "serviceAccount"]:
+            with self.subTest(field=field):
+                form = dict(FULL_FORM, **{field: ""})
+                with self.assertRaises(ValueError):
+                    mp.chart_values(form)
 
 
 class CheckUpgradeTest(unittest.TestCase):
