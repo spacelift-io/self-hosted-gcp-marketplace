@@ -45,7 +45,6 @@ RUN test -n "${VERSION}" \
 
 # Our install scripts replace Google's. The ENTRYPOINT of the base image stays
 # as it is: it runs /bin/deploy.sh.
-COPY deployer/bin/spacelift_mp.py /bin/spacelift_mp.py
 COPY deployer/deploy.sh /bin/deploy.sh
 COPY deployer/deploy_with_tests.sh /bin/deploy_with_tests.sh
-RUN chmod 0755 /bin/spacelift_mp.py /bin/deploy.sh /bin/deploy_with_tests.sh
+RUN chmod 0755 /bin/deploy.sh /bin/deploy_with_tests.sh

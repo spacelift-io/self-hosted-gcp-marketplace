@@ -1,12 +1,13 @@
 # Values of the spacelift-mp chart.
 #
-# The top-level keys below (license, registry, domain, ...) are the fields of
+# The top-level keys below (license, registry, storage, ...) are the fields of
 # the Marketplace install form (deployer/schema.yaml). The deployer passes the
-# form as a values file, plus a second file that maps the form to the
-# spacelift-self-hosted chart (deployer/bin/spacelift_mp.py).
+# form to Helm as a values file.
 #
 # Everything under `spacelift:` goes to the spacelift-self-hosted chart. See
 # its values: https://github.com/spacelift-io/spacelift-self-hosted-helm-chart
+# The form fills some of them too: the service account, the domain
+# (spacelift.shared.serverHostname) and the Cloud SQL connection name.
 
 license:
   token: ""
@@ -18,13 +19,10 @@ registry:
   # Name of the image pull secret this chart creates from the values above.
   pullSecretName: spacelift-registry
 
-domain: ""
-
 encryption:
   rsaPrivateKey: ""
 
 database:
-  connectionName: ""
   name: ""
   user: ""
 
@@ -42,9 +40,15 @@ storage:
     userUploadedWorkspaces: ""
     workspace: ""
 
+# The two Ingresses of the server (templates/ingress.yaml). This chart renders
+# them instead of the spacelift-self-hosted chart, because the GKE settings
+# below are annotations whose keys can't be form field names.
 ingress:
+  # Names of the global static IP addresses the GKE load balancers use.
   ipv4AddressName: ""
   ipv6AddressName: ""
+  # The cert-manager ClusterIssuer for the TLS certificate. Empty: the
+  # certificate is managed in another way and must be in the Secret `cert`.
   clusterIssuer: letsencrypt-prod
 
 admin:
@@ -69,8 +73,8 @@ rootImage:
   repository: ""
   tag: ""
 
-# Set by the deployer: false when no license is given. Then only a placeholder
-# is installed instead of Spacelift.
+# Set by the deployer (deploy.sh): false when no license is given. Then only a
+# placeholder is installed instead of Spacelift.
 installSpacelift: true
 
 spacelift:
@@ -87,8 +91,8 @@ spacelift:
   drain:
     secretRef: spacelift-drain
 
-  # Marketplace creates or picks the service account (the serviceAccount
-  # field of the form); the chart must not create one.
+  # Marketplace creates or picks the service account (the form field
+  # spacelift.serviceAccount.name); the chart must not create one.
   serviceAccount:
     create: false
 
@@ -96,6 +100,11 @@ spacelift:
     enabled: true
     quiet: true
 
+  # The deployer sets fullnameOverride to the install name, so the chart's
+  # objects are <name>-server, <name>-mqtt, ... whatever the name is.
+
+  # Rendered by this chart instead, see `ingress` above.
+  ingress:
+    enabled: false
   ingressV6:
-    annotations:
-      acme.cert-manager.io/http01-edit-in-place: "true"
+    enabled: false

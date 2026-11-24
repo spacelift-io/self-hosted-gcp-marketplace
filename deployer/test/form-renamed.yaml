@@ -1,17 +1,14 @@
 # The full install form under a name without "spacelift" in it, for local checks (make test).
 name: sl-prod
 namespace: tools
-serviceAccount: spacelift-backend
 license:
   token: test-license-token
 registry:
   username: spacelift
   password: test-registry-password
-domain: spacelift.example.com
 encryption:
   rsaPrivateKey: dGVzdC1yc2Eta2V5
 database:
-  connectionName: test-project:us-central1:spacelift-db
   name: spacelift
   user: spacelift-backend@test-project.iam
 storage:
@@ -34,3 +31,10 @@ ingress:
 admin:
   username: ""
   password: ""
+spacelift:
+  serviceAccount:
+    name: spacelift-backend
+  shared:
+    serverHostname: spacelift.example.com
+  cloudSqlProxy:
+    dbConnectionName: test-project:us-central1:spacelift-db

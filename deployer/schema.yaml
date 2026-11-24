@@ -4,6 +4,10 @@
 # Most values come from the outputs of the Spacelift Terraform module for GCP
 # (terraform-google-spacelift-selfhosted), which the customer runs before the
 # install. The install guide maps each output to its field.
+#
+# Each field is a value of the spacelift-mp chart: Google's print_config.py
+# turns the dots in a field name into nested keys. Fields under `spacelift.`
+# go straight to the spacelift-self-hosted chart, so they use its value names.
 
 x-google-marketplace:
   schemaVersion: v2
@@ -46,7 +50,7 @@ properties:
     x-google-marketplace:
       type: NAMESPACE
 
-  serviceAccount:
+  spacelift.serviceAccount.name:
     type: string
     title: Kubernetes service account
     description: >-
@@ -84,7 +88,7 @@ properties:
     x-google-marketplace:
       type: MASKED_FIELD
 
-  domain:
+  spacelift.shared.serverHostname:
     type: string
     title: Spacelift domain
     description: The domain Spacelift is served on, without https:// (for example spacelift.example.com).
@@ -96,7 +100,7 @@ properties:
     x-google-marketplace:
       type: MASKED_FIELD
 
-  database.connectionName:
+  spacelift.cloudSqlProxy.dbConnectionName:
     type: string
     title: Cloud SQL connection name
     description: Terraform output db_connection_name.
@@ -179,9 +183,9 @@ properties:
 required:
   - name
   - namespace
-  - serviceAccount
-  - domain
-  - database.connectionName
+  - spacelift.serviceAccount.name
+  - spacelift.shared.serverHostname
+  - spacelift.cloudSqlProxy.dbConnectionName
   - database.name
   - database.user
   - storage.buckets.deliveries

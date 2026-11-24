@@ -9,12 +9,12 @@
 #
 # Steps:
 #   1. read the form;
-#   2. stop if the installed version is higher than this one (no downgrades);
-#   3. hand the Application, which Marketplace created, over to Helm;
-#   4. helm upgrade --install;
-#   5. make the Application own every object of the release, and Helm's
+#   2. hand the Application, which Marketplace created, over to Helm;
+#   3. helm upgrade --install; the chart stops a downgrade
+#      (chart/spacelift-mp/templates/checks.yaml);
+#   4. make the Application own every object of the release, and Helm's
 #      release Secrets, so deleting the app removes everything;
-#   6. mark the Application as ready and remove the deployer's service account.
+#   5. mark the Application as ready and remove the deployer's service account.
 #
 # DEPLOY_MODE=test (set by deploy_with_tests.sh) also waits for the app to be
 # ready.
@@ -44,20 +44,23 @@ app_uid="$(kubectl get "applications.app.k8s.io/${NAME}" --namespace="${NAMESPAC
 app_api_version="$(kubectl get "applications.app.k8s.io/${NAME}" --namespace="${NAMESPACE}" --output=jsonpath='{.apiVersion}')"
 /bin/expand_config.py --values_mode raw --app_uid "${app_uid}"
 
+# The form is a values file of the chart: its field names are value paths.
 work_dir="$(mktemp -d)"
 form_values="${work_dir}/form.yaml"
-chart_values="${work_dir}/chart.yaml"
 /bin/print_config.py --output=yaml --values_mode expanded > "${form_values}"
-/bin/spacelift_mp.py values --form "${form_values}" > "${chart_values}"
-
 version="$(/bin/print_published_version.py)"
-if [[ "$(python3 -c 'import sys, yaml; print(yaml.safe_load(open(sys.argv[1]))["installSpacelift"])' "${chart_values}")" == "False" ]]; then
-  echo "No license given: installing only the placeholder."
-fi
 
-STEP="check the installed version"
-installed_chart="$(helm list --namespace "${NAMESPACE}" --filter "^${NAME}\$" --output json | python3 -c 'import json, sys; r = json.load(sys.stdin); print(r[0]["chart"] if r else "")')"
-/bin/spacelift_mp.py check-upgrade --installed "${installed_chart#spacelift-mp-}" --new "${version}"
+# Name the spacelift-self-hosted chart's objects after the install:
+# <name>-server, <name>-mqtt, ... Without it the chart adds "-spacelift" to a
+# name that doesn't contain "spacelift". A values file can't do it: it has no
+# templates.
+helm_args=(--set-string "spacelift.fullnameOverride=${NAME}")
+# The chart installs Spacelift on the condition installSpacelift, which must be
+# a boolean, so the license can't be the condition itself.
+if [[ "$(python3 -c 'import sys, yaml; f = yaml.safe_load(open(sys.argv[1])) or {}; print(bool((f.get("license") or {}).get("token")))' "${form_values}")" == "False" ]]; then
+  echo "No license given: installing only the placeholder."
+  helm_args+=(--set installSpacelift=false)
+fi
 
 STEP="hand the Application over to Helm"
 kubectl annotate "applications.app.k8s.io/${NAME}" --namespace="${NAMESPACE}" --overwrite \
@@ -81,7 +84,7 @@ helm upgrade --install "${NAME}" "${CHART_DIR}" \
   --namespace "${NAMESPACE}" \
   --force-conflicts \
   --values "${form_values}" \
-  --values "${chart_values}"
+  "${helm_args[@]}"
 rm -rf "${work_dir}"
 
 STEP="set the owner of the release objects"

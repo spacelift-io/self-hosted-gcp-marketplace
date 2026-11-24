@@ -1,0 +1,34 @@
+{{- /*
+Checks that stop an install or upgrade before it changes anything. This file
+renders no objects.
+*/ -}}
+
+{{- /*
+The Secrets and Ingresses of this chart address the spacelift-self-hosted
+chart's Services as <install name>-mqtt and <install name>-server. That holds
+only when its fullnameOverride is the install name; deploy.sh sets it.
+*/ -}}
+{{- $fullname := .Values.spacelift.fullnameOverride | default "" }}
+{{- if and .Values.installSpacelift (ne $fullname .Release.Name) }}
+{{- fail (printf "spacelift.fullnameOverride is %q, but must be the install name %q. Pass --set spacelift.fullnameOverride=%s, as the deployer does." $fullname .Release.Name .Release.Name) }}
+{{- end }}
+
+{{- /* The chart doesn't create a service account, so the pods need the one from the form. */ -}}
+{{- if .Values.installSpacelift }}
+{{- $_ := include "spacelift-mp.required" (list .Values.spacelift.serviceAccount.name "spacelift.serviceAccount.name") }}
+{{- end }}
+
+{{- /*
+No downgrades: Spacelift's database migrations only go forward. The installed
+version is in the helm.sh/chart label of the Application, which this chart
+manages. On the first install the Application has no such label: Marketplace
+created it. lookup finds nothing in `helm template` and `helm lint`.
+*/ -}}
+{{- $app := lookup "app.k8s.io/v1beta1" "Application" .Release.Namespace .Release.Name | default dict }}
+{{- $installedChart := dig "metadata" "labels" "helm.sh/chart" "" $app }}
+{{- if hasPrefix (printf "%s-" .Chart.Name) $installedChart }}
+{{- $installed := trimPrefix (printf "%s-" .Chart.Name) $installedChart }}
+{{- if lt (include "spacelift-mp.versionKey" .Chart.Version) (include "spacelift-mp.versionKey" $installed) }}
+{{- fail (printf "version %s is installed, and %s is lower. Downgrades are not supported, because database migrations only go forward." $installed .Chart.Version) }}
+{{- end }}
+{{- end }}

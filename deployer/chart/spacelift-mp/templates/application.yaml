@@ -26,9 +26,9 @@ spec:
     links:
       - description: Documentation
         url: https://docs.spacelift.io
-      {{- if and .Values.installSpacelift .Values.domain }}
+      {{- if and .Values.installSpacelift .Values.spacelift.shared.serverHostname }}
       - description: Spacelift
-        url: https://{{ .Values.domain }}
+        url: https://{{ .Values.spacelift.shared.serverHostname }}
       {{- end }}
     {{- if not .Values.installSpacelift }}
     notes: >-

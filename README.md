@@ -21,18 +21,17 @@ deployer/
   schema.yaml            the Marketplace install form
   deploy.sh              the install script (replaces Google's /bin/deploy.sh)
   deploy_with_tests.sh   the test install that `mpdev verify` runs
-  bin/spacelift_mp.py    maps the form to chart values; blocks downgrades
-  chart/spacelift-mp/    wrapper chart around spacelift-self-hosted
+  chart/spacelift-mp/    wrapper chart around spacelift-self-hosted; renders the GKE Ingresses, blocks downgrades
   test/                  install forms with fake values for local checks
   hack/                  temporary build fixes, each one says when to remove it
 ```
 
 ## Development
 
-Needs Helm 4, Python 3 with PyYAML, and Docker.
+Needs Helm 4, Python 3 with PyYAML (for the render checks), and Docker.
 
 ```shell
-make test     # unit tests, helm lint, render the chart with and without a license
+make test     # helm lint, render the chart with and without a license and check it
 make build    # build the deployer image for linux/amd64
 ```
 

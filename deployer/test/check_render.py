@@ -15,6 +15,7 @@ import yaml
 
 STATIC_IP_ANNOTATION = "kubernetes.io/ingress.global-static-ip-name"
 CLUSTER_ISSUER_ANNOTATION = "cert-manager.io/cluster-issuer"
+EDIT_IN_PLACE_ANNOTATION = "acme.cert-manager.io/http01-edit-in-place"
 
 
 def get(data, path):
@@ -74,9 +75,10 @@ def check(form, render):
     yield not render.of_kind("ServiceAccount"), "the chart creates no ServiceAccount"
     pull_secret = render.get("Secret", "spacelift-registry")
     yield pull_secret is not None and pull_secret["type"] == "kubernetes.io/dockerconfigjson", "the pull secret spacelift-registry exists"
+    service_account = get(form, "spacelift.serviceAccount.name")
     for o in render.of_kind("Deployment"):
         pod = o["spec"]["template"]["spec"]
-        yield pod.get("serviceAccountName") == form["serviceAccount"], f"Deployment {o['metadata']['name']} runs as {pod.get('serviceAccountName')}"
+        yield pod.get("serviceAccountName") == service_account, f"Deployment {o['metadata']['name']} runs as {pod.get('serviceAccountName')}"
         pull_secrets = [s["name"] for s in pod.get("imagePullSecrets", [])]
         yield "spacelift-registry" in pull_secrets, f"Deployment {o['metadata']['name']} pulls with {pull_secrets}"
 
@@ -85,6 +87,14 @@ def check(form, render):
     user = urllib.parse.quote(form["database"]["user"], safe="")
     want = f"postgres://{user}@127.0.0.1/{form['database']['name']}"
     yield shared["DATABASE_URL"] == want, f"DATABASE_URL is {shared['DATABASE_URL']}"
+    domain = get(form, "spacelift.shared.serverHostname")
+    yield shared["SERVER_DOMAIN"] == domain, f"SERVER_DOMAIN is {shared['SERVER_DOMAIN']}"
+    connection = get(form, "spacelift.cloudSqlProxy.dbConnectionName")
+    for o in render.of_kind("Deployment"):
+        pod = o["spec"]["template"]["spec"]
+        for c in pod.get("initContainers", []) + pod["containers"]:
+            if c["name"] == "cloud-sql-proxy":
+                yield connection in c.get("args", []), f"Deployment {o['metadata']['name']} connects to Cloud SQL {connection}"
 
     # One Ingress per static IP; the IPv6 one gets the ClusterIssuer.
     ingresses = {get(o, "metadata.annotations").get(STATIC_IP_ANNOTATION): o for o in render.of_kind("Ingress")}
@@ -93,6 +103,11 @@ def check(form, render):
     v6 = ingresses.get(form["ingress"]["ipv6AddressName"])
     issuer = get(v6, "metadata.annotations").get(CLUSTER_ISSUER_ANNOTATION) if v6 else None
     yield issuer == form["ingress"]["clusterIssuer"], f"the IPv6 Ingress uses the ClusterIssuer {issuer}"
+    edit_in_place = get(v6, "metadata.annotations").get(EDIT_IN_PLACE_ANNOTATION) if v6 else None
+    yield edit_in_place == "true", "cert-manager solves the HTTP-01 challenge on the IPv6 Ingress itself"
+    for o in render.of_kind("Ingress"):
+        hosts = [rule["host"] for rule in o["spec"]["rules"]]
+        yield hosts == [domain], f"Ingress {o['metadata']['name']} serves {hosts}"
 
 
 def main():
