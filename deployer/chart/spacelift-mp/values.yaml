@@ -103,8 +103,9 @@ spacelift:
     enabled: true
     quiet: true
 
-  # The deployer sets fullnameOverride to the install name, so the chart's
-  # objects are <name>-server, <name>-mqtt, ... whatever the name is.
+  # fullnameOverride is not set here: the deployer sets it to the install
+  # name, so the chart's objects are <name>-server, <name>-mqtt, ... The
+  # chart's own default is "spacelift".
 
   # Rendered by this chart instead, see `ingress` above.
   ingress:

@@ -8,7 +8,7 @@ The Secrets and Ingresses of this chart address the spacelift-self-hosted
 chart's Services as <install name>-mqtt and <install name>-server. That holds
 only when its fullnameOverride is the install name; deploy.sh sets it.
 */ -}}
-{{- $fullname := .Values.spacelift.fullnameOverride | default "" }}
+{{- $fullname := .Values.spacelift.fullnameOverride }}
 {{- if and .Values.installSpacelift (ne $fullname .Release.Name) }}
 {{- fail (printf "spacelift.fullnameOverride is %q, but must be the install name %q. Pass --set spacelift.fullnameOverride=%s, as the deployer does." $fullname .Release.Name .Release.Name) }}
 {{- end }}

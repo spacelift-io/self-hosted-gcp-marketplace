@@ -6,8 +6,11 @@ spacelift-self-hosted 7.2.0 does not allow keys it doesn't know, so Helm
 rejects the values with "additional properties 'global' not allowed". This adds
 `global` to the schema inside the downloaded chart archive.
 
-Remove this script, and the calls to it in the Makefile and the Dockerfile,
-once a chart release allows `global` in its values schema.
+The fix is merged upstream, in
+https://github.com/spacelift-io/spacelift-self-hosted-helm-chart/pull/25, and
+ships with the next chart release after 7.2.0. Then raise the dependency in
+Chart.yaml and remove this script and the calls to it in the Makefile and the
+Dockerfile.
 
 Usage: allow-global-in-chart-schema.py <chart-dir>/charts/spacelift-self-hosted-*.tgz
 """

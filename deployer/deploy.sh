@@ -4,8 +4,7 @@
 #
 # Replaces /bin/deploy.sh of Google's deployer_helm image. Google's script
 # renders the chart with `helm template` and applies it with kubectl. This one
-# runs `helm upgrade --install`, so the app is a regular Helm release that the
-# customer can upgrade with `helm upgrade` later.
+# runs `helm upgrade --install`, so the install is a regular Helm release.
 #
 # Steps:
 #   1. read the form;
@@ -51,9 +50,10 @@ form_values="${work_dir}/form.yaml"
 version="$(/bin/print_published_version.py)"
 
 # Name the spacelift-self-hosted chart's objects after the install:
-# <name>-server, <name>-mqtt, ... Without it the chart adds "-spacelift" to a
-# name that doesn't contain "spacelift". A values file can't do it: it has no
-# templates.
+# <name>-server, <name>-mqtt, ... The chart's default fullnameOverride is
+# "spacelift", so without this every install would get spacelift-* objects,
+# while this chart addresses them as <name>-*. A values file can't set it: it
+# has no templates.
 helm_args=(--set-string "spacelift.fullnameOverride=${NAME}")
 # The chart installs Spacelift on the condition installSpacelift, which must be
 # a boolean, so the license can't be the condition itself.
