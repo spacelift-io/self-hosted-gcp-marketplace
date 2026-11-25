@@ -154,12 +154,16 @@ properties:
   ingress.ipv4AddressName:
     type: string
     title: IPv4 address name
-    description: Name of the global static IPv4 address for the load balancer (Terraform output gke_public_v4_name).
+    description: >-
+      Name of the global static IPv4 address for the load balancer: Terraform
+      output gke_public_v4_name (module v3.3.0 or later).
 
   ingress.ipv6AddressName:
     type: string
     title: IPv6 address name
-    description: Name of the global static IPv6 address for the load balancer (Terraform output gke_public_v6_name).
+    description: >-
+      Name of the global static IPv6 address for the load balancer: Terraform
+      output gke_public_v6_name (module v3.3.0 or later).
 
   ingress.clusterIssuer:
     type: string

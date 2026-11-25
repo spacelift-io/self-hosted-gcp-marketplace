@@ -25,8 +25,8 @@ storage:
     userUploadedWorkspaces: test-user-uploaded-workspaces
     workspace: test-workspace
 ingress:
-  ipv4AddressName: spacelift-v4
-  ipv6AddressName: spacelift-v6
+  ipv4AddressName: spacelift-gke-public-v4-test
+  ipv6AddressName: spacelift-gke-public-v6-test
   clusterIssuer: letsencrypt-prod
 admin:
   username: ""
