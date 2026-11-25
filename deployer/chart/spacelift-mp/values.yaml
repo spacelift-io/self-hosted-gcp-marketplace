@@ -92,9 +92,12 @@ spacelift:
     secretRef: spacelift-drain
 
   # Marketplace creates or picks the service account (the form field
-  # spacelift.serviceAccount.name); the chart must not create one.
+  # spacelift.serviceAccount.name); the chart must not create one. The empty
+  # name replaces the chart's default "spacelift-backend", so an empty form
+  # field fails the install (checks.yaml) instead of using another account.
   serviceAccount:
     create: false
+    name: ""
 
   cloudSqlProxy:
     enabled: true

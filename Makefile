@@ -63,6 +63,11 @@ template: $(BUILD)/full.yaml $(BUILD)/renamed.yaml $(BUILD)/placeholder.yaml $(B
 	@! helm template sl-prod $(CHART) --namespace tools --values deployer/test/form-renamed.yaml >/dev/null 2>$(BUILD)/no-fullname.err
 	@grep -q 'must be the install name' $(BUILD)/no-fullname.err
 	@echo "  ok"
+	@echo "Without a service account in the form: the chart refuses to render."
+	@! helm template spacelift $(CHART) --namespace spacelift --values deployer/test/form-full.yaml \
+		$(call deploy_flags,deployer/test/form-full.yaml) --set-string spacelift.serviceAccount.name= >/dev/null 2>$(BUILD)/no-sa.err
+	@grep -q 'spacelift.serviceAccount.name' $(BUILD)/no-sa.err
+	@echo "  ok"
 
 build:
 	docker buildx build --platform linux/amd64 \

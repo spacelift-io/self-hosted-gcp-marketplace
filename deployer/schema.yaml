@@ -84,7 +84,7 @@ properties:
   registry.password:
     type: string
     title: Registry password
-    description: Password for oci.spacelift.io, from Spacelift together with the license.
+    description: Password for oci.spacelift.io, from Spacelift together with the license. Required with a license.
     x-google-marketplace:
       type: MASKED_FIELD
 
@@ -96,7 +96,7 @@ properties:
   encryption.rsaPrivateKey:
     type: string
     title: Encryption key
-    description: The base64-encoded RSA private key Spacelift uses to encrypt data in the database.
+    description: The base64-encoded RSA private key Spacelift uses to encrypt data in the database. Required with a license.
     x-google-marketplace:
       type: MASKED_FIELD
 

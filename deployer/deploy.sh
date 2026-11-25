@@ -57,9 +57,28 @@ version="$(/bin/print_published_version.py)"
 helm_args=(--set-string "spacelift.fullnameOverride=${NAME}")
 # The chart installs Spacelift on the condition installSpacelift, which must be
 # a boolean, so the license can't be the condition itself.
-if [[ "$(python3 -c 'import sys, yaml; f = yaml.safe_load(open(sys.argv[1])) or {}; print(bool((f.get("license") or {}).get("token")))' "${form_values}")" == "False" ]]; then
+# A separate assignment, so a failing python3 stops the script (set -e).
+has_license="$(python3 -c 'import sys, yaml; f = yaml.safe_load(open(sys.argv[1])) or {}; print(bool((f.get("license") or {}).get("token")))' "${form_values}")"
+if [[ "${has_license}" == "False" ]]; then
   echo "No license given: installing only the placeholder."
   helm_args+=(--set installSpacelift=false)
+else
+  # The form can't require these: the placeholder doesn't need them. Stop here
+  # with the field names, before Helm changes anything.
+  STEP="check the form"
+  missing="$(python3 -c 'import sys, yaml
+f = yaml.safe_load(open(sys.argv[1])) or {}
+fields = ["encryption.rsaPrivateKey", "registry.password"]
+def get(path):
+    v = f
+    for k in path.split("."):
+        v = (v or {}).get(k)
+    return v
+print(", ".join(p for p in fields if not get(p)))' "${form_values}")"
+  if [[ -n "${missing}" ]]; then
+    echo "ERROR: a license is given, but these form fields are empty: ${missing}. Deploy again with them filled in." >&2
+    exit 1
+  fi
 fi
 
 STEP="hand the Application over to Helm"
