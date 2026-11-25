@@ -113,7 +113,9 @@ properties:
   database.user:
     type: string
     title: Database user
-    description: The IAM database user (the email of the Google service account from the Terraform module).
+    description: >-
+      The IAM database user: Terraform output backend_service_account_email.
+      The full email works, the deployer removes the ".gserviceaccount.com" ending that Cloud SQL leaves out.
 
   storage.buckets.deliveries:
     type: string

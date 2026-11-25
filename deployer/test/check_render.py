@@ -84,9 +84,12 @@ def check(form, render):
 
     # The form values reach spacelift-shared.
     yield shared["LICENSE_TOKEN"] == form["license"]["token"], "LICENSE_TOKEN is the license from the form"
-    user = urllib.parse.quote(form["database"]["user"], safe="")
+    # Cloud SQL's IAM user is the service account email without ".gserviceaccount.com".
+    user = form["database"]["user"].removesuffix(".gserviceaccount.com")
+    user = urllib.parse.quote(user, safe="")
     want = f"postgres://{user}@127.0.0.1/{form['database']['name']}"
     yield shared["DATABASE_URL"] == want, f"DATABASE_URL is {shared['DATABASE_URL']}"
+    yield "gserviceaccount.com" not in shared["DATABASE_URL"], "DATABASE_URL has no .gserviceaccount.com in the user"
     domain = get(form, "spacelift.shared.serverHostname")
     yield shared["SERVER_DOMAIN"] == domain, f"SERVER_DOMAIN is {shared['SERVER_DOMAIN']}"
     connection = get(form, "spacelift.cloudSqlProxy.dbConnectionName")

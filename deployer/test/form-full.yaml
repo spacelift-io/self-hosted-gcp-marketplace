@@ -10,7 +10,7 @@ encryption:
   rsaPrivateKey: dGVzdC1yc2Eta2V5
 database:
   name: spacelift
-  user: spacelift-backend@test-project.iam
+  user: spacelift-backend@test-project.iam.gserviceaccount.com
 storage:
   buckets:
     deliveries: test-deliveries

@@ -37,9 +37,11 @@ Usage: include "spacelift-mp.required" (list .Values.database.name "database.nam
 
 {{/*
 Postgres URL for Cloud SQL through the cloud-sql-proxy sidecar, with IAM login.
+Cloud SQL names the IAM user of a service account after its email without
+".gserviceaccount.com", so the suffix is removed if the form has the full email.
 */}}
 {{- define "spacelift-mp.databaseURL" -}}
-{{- $user := include "spacelift-mp.required" (list .Values.database.user "database.user") -}}
+{{- $user := include "spacelift-mp.required" (list .Values.database.user "database.user") | trimSuffix ".gserviceaccount.com" -}}
 {{- $name := include "spacelift-mp.required" (list .Values.database.name "database.name") -}}
 {{- printf "postgres://%s@127.0.0.1/%s" (urlquery $user) $name -}}
 {{- end }}
