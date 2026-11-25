@@ -22,7 +22,7 @@ deployer/
   schema.yaml            the Marketplace install form
   deploy.sh              the install script (replaces Google's /bin/deploy.sh)
   deploy_with_tests.sh   the test install that `mpdev verify` runs
-  chart/spacelift-mp/    wrapper chart around spacelift-self-hosted; renders the GKE Ingresses, blocks downgrades
+  chart/spacelift-mp/    wrapper chart around spacelift-self-hosted; renders the GKE Ingresses
   test/                  install forms with fake values for local checks
   hack/                  temporary build fixes, each one says when to remove it
 ```

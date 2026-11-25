@@ -9,8 +9,7 @@
 # Steps:
 #   1. read the form;
 #   2. hand the Application, which Marketplace created, over to Helm;
-#   3. helm upgrade --install; the chart stops a downgrade
-#      (chart/spacelift-mp/templates/checks.yaml);
+#   3. helm upgrade --install;
 #   4. make the Application own every object of the release, and Helm's
 #      release Secrets, so deleting the app removes everything;
 #   5. mark the Application as ready and remove the deployer's service account.
@@ -62,23 +61,6 @@ has_license="$(python3 -c 'import sys, yaml; f = yaml.safe_load(open(sys.argv[1]
 if [[ "${has_license}" == "False" ]]; then
   echo "No license given: installing only the placeholder."
   helm_args+=(--set installSpacelift=false)
-else
-  # The form can't require these: the placeholder doesn't need them. Stop here
-  # with the field names, before Helm changes anything.
-  STEP="check the form"
-  missing="$(python3 -c 'import sys, yaml
-f = yaml.safe_load(open(sys.argv[1])) or {}
-fields = ["encryption.rsaPrivateKey", "registry.password"]
-def get(path):
-    v = f
-    for k in path.split("."):
-        v = (v or {}).get(k)
-    return v
-print(", ".join(p for p in fields if not get(p)))' "${form_values}")"
-  if [[ -n "${missing}" ]]; then
-    echo "ERROR: a license is given, but these form fields are empty: ${missing}. Deploy again with them filled in." >&2
-    exit 1
-  fi
 fi
 
 STEP="hand the Application over to Helm"
@@ -120,8 +102,6 @@ owner_patch="$(printf '{"metadata":{"ownerReferences":[{"apiVersion":"%s","kind"
 done
 
 STEP="mark the Application as ready"
-kubectl patch "applications.app.k8s.io/${NAME}" --namespace="${NAMESPACE}" --type merge \
-  --patch "{\"spec\":{\"descriptor\":{\"version\":\"${version}\"}}}" >/dev/null
 patch_assembly_phase.sh --status="Success"
 
 if [[ "${DEPLOY_MODE}" == "test" ]]; then
