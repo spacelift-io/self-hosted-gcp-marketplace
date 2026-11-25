@@ -22,8 +22,8 @@ x-google-marketplace:
     kalmSupported: false
 
   images:
-    # The image at the root of the repository. It runs nothing: the Spacelift
-    # images are pulled from oci.spacelift.io with the customer's credentials.
+    # The image at the root of the repository. Not deployed: the Spacelift
+    # images come from oci.spacelift.io, pulled with the customer's credentials.
     '':
       properties:
         rootImage.repository:

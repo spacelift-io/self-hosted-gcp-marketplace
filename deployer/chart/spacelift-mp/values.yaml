@@ -68,7 +68,7 @@ drain:
     webhooks: 1
 
 # Values of the image at the root of the Marketplace repository, filled in by
-# Marketplace. Not used: that image runs nothing.
+# Marketplace. Not deployed: the Spacelift images come from oci.spacelift.io.
 rootImage:
   repository: ""
   tag: ""
