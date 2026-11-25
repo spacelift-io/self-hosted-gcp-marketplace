@@ -37,7 +37,7 @@ spec:
     {{- if not .Values.installSpacelift }}
     notes: >-
       No Spacelift license was given, so only a placeholder is installed.
-      Deploy again with a license to install Spacelift.
+      To install Spacelift, delete this app and deploy it again with a license.
     {{- end }}
   # The spacelift-self-hosted chart labels each part with its own instance
   # name: <name>, <name>-drain, <name>-scheduler, <name>-vcs-gateway.
