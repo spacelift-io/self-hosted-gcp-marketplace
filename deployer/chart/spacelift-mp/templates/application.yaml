@@ -11,6 +11,10 @@ metadata:
   labels:
     {{- include "spacelift-mp.labels" . | nindent 4 }}
   annotations:
+    # deploy.sh makes the Application the owner of every object of the release,
+    # so deleting it deletes the whole install. Helm must never delete it on its
+    # own, for example in a `helm upgrade` with a chart that has no Application.
+    helm.sh/resource-policy: keep
     marketplace.cloud.google.com/deploy-info: '{"partner_id": "spacelift-public", "product_id": "spacelift-gcp-kubernetes-byol", "partner_name": "Spacelift"}'
 spec:
   descriptor:

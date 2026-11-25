@@ -9,7 +9,9 @@ Spacelift Self-Hosted on Marketplace is "bring your own license": you get a lice
 1. The customer runs the Spacelift Terraform module for GCP ([terraform-google-spacelift-selfhosted](https://github.com/spacelift-io/terraform-google-spacelift-selfhosted)). It creates the GKE cluster, Cloud SQL, the Cloud Storage buckets and the IP addresses.
 2. The customer creates a Kubernetes service account annotated for Workload Identity, installs cert-manager, and fills in the Marketplace form with the Terraform outputs, the license and the registry credentials.
 3. Marketplace runs the deployer image as a Job in the cluster. The deployer installs the `spacelift-mp` chart with `helm upgrade --install`, so the app is a regular Helm release.
-4. Later versions are installed with `helm upgrade`.
+4. Later versions are installed with `helm upgrade` of the same `spacelift-mp` chart.
+
+The Application owns every object of the install, so deleting the app in the GKE console removes everything, Helm's release Secrets included.
 
 Without a license, the deployer installs only a placeholder: the Application resource and a ConfigMap.
 

@@ -56,6 +56,8 @@ def check(form, render):
 
     # The Application selects every Deployment, Service and Ingress.
     app = render.of_kind("Application")[0]
+    policy = app["metadata"]["annotations"].get("helm.sh/resource-policy")
+    yield policy == "keep", f"the Application has helm.sh/resource-policy {policy}, Helm never deletes it"
     [expression] = app["spec"]["selector"]["matchExpressions"]
     selected = set(expression["values"])
     for kind in ["Deployment", "Service", "Ingress"]:

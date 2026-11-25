@@ -48,6 +48,7 @@ template: $(BUILD)/full.yaml $(BUILD)/renamed.yaml $(BUILD)/placeholder.yaml $(B
 	@echo "Without a license: only the Application and the placeholder ConfigMap."
 	@test "$$(grep -c '^kind:' $(BUILD)/placeholder.yaml)" = 2
 	@grep -q '^kind: ConfigMap' $(BUILD)/placeholder.yaml
+	@grep -q 'helm.sh/resource-policy: keep' $(BUILD)/placeholder.yaml
 	@! grep -q 'oci.spacelift.io' $(BUILD)/placeholder.yaml
 	@echo "  ok"
 	@echo "With a license:"
