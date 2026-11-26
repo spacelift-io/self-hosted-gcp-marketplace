@@ -77,6 +77,13 @@ rootImage:
 # placeholder is installed instead of Spacelift.
 installSpacelift: true
 
+# Every Pod of the app carries Google's consumption tracking label and sets
+# resource requests and limits, as Marketplace asks of products that run in the
+# customer's project:
+# https://docs.cloud.google.com/marketplace/docs/partners/terraform-kubernetes/partner-consumption-tracking
+# The label value is the product's "Consumption tracking label" in Producer
+# Portal. The spacelift-self-hosted chart sets only requests; the limits below
+# leave room above the peak use seen on a test install.
 spacelift:
   shared:
     secretRef: spacelift-shared
@@ -87,9 +94,21 @@ spacelift:
 
   server:
     secretRef: spacelift-server
+    podLabels:
+      goog-partner-solution: isol_plb32_001kf00001dgv6liav_j4ogkpsbgbi4elkodchyxrpwapwswpd
+    resources:
+      limits:
+        cpu: "2"
+        memory: 4Gi
 
   drain:
     secretRef: spacelift-drain
+    podLabels:
+      goog-partner-solution: isol_plb32_001kf00001dgv6liav_j4ogkpsbgbi4elkodchyxrpwapwswpd
+    resources:
+      limits:
+        cpu: "1"
+        memory: 1Gi
 
   # Marketplace creates or picks the service account (the form field
   # spacelift.serviceAccount.name); the chart must not create one. The empty
@@ -99,9 +118,14 @@ spacelift:
     create: false
     name: ""
 
+  # The sidecar of the server and drain Pods.
   cloudSqlProxy:
     enabled: true
     quiet: true
+    resources:
+      limits:
+        cpu: 500m
+        memory: 256Mi
 
   # fullnameOverride is not set here: the deployer sets it to the install
   # name, so the chart's objects are <name>-server, <name>-mqtt, ... The
