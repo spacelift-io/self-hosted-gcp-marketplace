@@ -49,3 +49,10 @@ RUN test -n "${VERSION}" \
 COPY deployer/deploy.sh /bin/deploy.sh
 COPY deployer/deploy_with_tests.sh /bin/deploy_with_tests.sh
 RUN chmod 0755 /bin/deploy.sh /bin/deploy_with_tests.sh
+
+# The test install of `mpdev verify` and Google's verification: test values for
+# the form, and the tester, which runs this same image.
+COPY deployer/data-test /data-test
+COPY deployer/tester/start_tester.sh /bin/start_tester.sh
+COPY deployer/tester/check_placeholder.sh /bin/check_placeholder.sh
+RUN chmod 0755 /bin/start_tester.sh /bin/check_placeholder.sh

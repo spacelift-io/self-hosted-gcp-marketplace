@@ -1,0 +1,62 @@
+# Test values for the install form, used only by `mpdev verify` and Google's
+# verification. deploy_with_tests.sh lays these properties over
+# /data/schema.yaml before the install.
+#
+# The test has no license, so the deployer installs only the placeholder and
+# none of these values reaches a running Spacelift. They only fill the
+# required fields that have no default in the real form.
+#
+# The service account field is not here: Marketplace creates one for the test.
+
+properties:
+  spacelift.shared.serverHostname:
+    type: string
+    default: spacelift.example.com
+  spacelift.cloudSqlProxy.dbConnectionName:
+    type: string
+    default: test-project:us-central1:spacelift-db
+  database.name:
+    type: string
+    default: spacelift
+  database.user:
+    type: string
+    default: spacelift-backend@test-project.iam.gserviceaccount.com
+  storage.buckets.deliveries:
+    type: string
+    default: test-deliveries
+  storage.buckets.largeQueueMessages:
+    type: string
+    default: test-large-queue-messages
+  storage.buckets.metadata:
+    type: string
+    default: test-metadata
+  storage.buckets.modules:
+    type: string
+    default: test-modules
+  storage.buckets.policyInputs:
+    type: string
+    default: test-policy-inputs
+  storage.buckets.runLogs:
+    type: string
+    default: test-run-logs
+  storage.buckets.runObservability:
+    type: string
+    default: test-run-observability
+  storage.buckets.states:
+    type: string
+    default: test-states
+  storage.buckets.uploads:
+    type: string
+    default: test-uploads
+  storage.buckets.userUploadedWorkspaces:
+    type: string
+    default: test-user-uploaded-workspaces
+  storage.buckets.workspace:
+    type: string
+    default: test-workspace
+  ingress.ipv4AddressName:
+    type: string
+    default: spacelift-gke-public-v4-test
+  ingress.ipv6AddressName:
+    type: string
+    default: spacelift-gke-public-v6-test

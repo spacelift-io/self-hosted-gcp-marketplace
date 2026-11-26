@@ -15,7 +15,8 @@
 #   5. mark the Application as ready and remove the deployer's service account.
 #
 # DEPLOY_MODE=test (set by deploy_with_tests.sh) also waits for the app to be
-# ready.
+# ready and runs the tester (start_tester.sh) before step 5 removes the
+# service account the tester runs under.
 
 set -euo pipefail
 
@@ -121,6 +122,9 @@ patch_assembly_phase.sh --status="Success"
 if [[ "${DEPLOY_MODE}" == "test" ]]; then
   STEP="wait for the app to be ready"
   wait_for_ready.py --name "${NAME}" --namespace "${NAMESPACE}" --timeout "${WAIT_FOR_READY_TIMEOUT:-300}"
+
+  STEP="run the tester"
+  /bin/start_tester.sh
 fi
 
 STEP="remove the deployer's service account"
