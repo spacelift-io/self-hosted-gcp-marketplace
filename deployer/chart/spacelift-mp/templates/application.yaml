@@ -40,7 +40,7 @@ spec:
       To install Spacelift, delete this app and deploy it again with a license.
     {{- end }}
   # The spacelift-self-hosted chart labels each part with its own instance
-  # name: <name>, <name>-drain, <name>-scheduler, <name>-vcs-gateway.
+  # name: <name>, <name>-drain, <name>-vcs-gateway.
   selector:
     matchExpressions:
       - key: app.kubernetes.io/instance
@@ -48,7 +48,6 @@ spec:
         values:
           - {{ .Release.Name }}
           - {{ .Release.Name }}-drain
-          - {{ .Release.Name }}-scheduler
           - {{ .Release.Name }}-vcs-gateway
   componentKinds:
     - group: apps
