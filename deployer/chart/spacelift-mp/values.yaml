@@ -78,8 +78,11 @@ rootImage:
 installSpacelift: true
 
 # Every Pod of the app carries Google's consumption tracking label and sets
-# resource requests and limits, as Marketplace asks of products that run in the
-# customer's project:
+# resource requests and limits. Marketplace requires consumption tracking from
+# every product that runs in the customer's project:
+# https://docs.cloud.google.com/marketplace/docs/partners/get-started
+# Google describes how to add the label only in the docs of Terraform Kubernetes
+# apps. The steps are about Pod specs, so they apply to this app too:
 # https://docs.cloud.google.com/marketplace/docs/partners/terraform-kubernetes/partner-consumption-tracking
 # The label value is the product's "Consumption tracking label" in Producer
 # Portal. The spacelift-self-hosted chart sets only requests; the limits below
