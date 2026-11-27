@@ -1,0 +1,105 @@
+name: PR checks
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  HELM_VERSION: v4.3.2
+  PYYAML_VERSION: 6.0.4
+  KIND_VERSION: v0.31.0
+  KIND_SHA256: eb244cbafcc157dff60cf68693c14c9a75c4e6e6fedaf9cd71c58117cb93e3fa
+  DEPLOYER_IMAGE: spacelift-mp-deployer:ci
+
+jobs:
+  test:
+    name: Lint and render the chart
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v7
+
+      - name: Install Helm
+        uses: azure/setup-helm@v5
+        with:
+          version: ${{ env.HELM_VERSION }}
+
+      - name: Install Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Install PyYAML
+        run: pip install "PyYAML==${PYYAML_VERSION}"
+
+      # Helm 4 downloads a chart dependency only from a repo it knows.
+      - name: Add the Spacelift Helm repo
+        run: helm repo add spacelift https://downloads.spacelift.io/helm
+
+      - name: Run the checks
+        run: make test
+
+  verify:
+    name: Build the deployer and run mpdev verify on kind
+    runs-on: ubuntu-latest
+    # The deployer's base image and mpdev come from gcr.io/cloud-marketplace-tools,
+    # which needs a Google login. Runs only when the repo has one set up, and
+    # not for pull requests from forks.
+    if: >-
+      vars.GCP_WORKLOAD_IDENTITY_PROVIDER != '' &&
+      (github.event_name != 'pull_request' ||
+       github.event.pull_request.head.repo.full_name == github.repository)
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v7
+
+      - name: Log in to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+          token_format: access_token
+
+      - name: Log in to gcr.io
+        uses: docker/login-action@v4
+        with:
+          registry: gcr.io
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
+
+      - name: Install kind
+        run: |
+          curl -fsSL -o /tmp/kind "https://kind.sigs.k8s.io/dl/${KIND_VERSION}/kind-linux-amd64"
+          echo "${KIND_SHA256}  /tmp/kind" | sha256sum -c -
+          sudo install -m 0755 /tmp/kind /usr/local/bin/kind
+          kind version
+
+      - name: Build the deployer image
+        run: make build
+
+      - name: Run mpdev verify
+        env:
+          LOGS_DIR: ${{ runner.temp }}/mpdev-logs
+        run: make verify-kind
+
+      - name: Upload the mpdev logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: mpdev-logs
+          path: ${{ runner.temp }}/mpdev-logs
+          if-no-files-found: ignore

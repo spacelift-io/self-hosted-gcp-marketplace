@@ -37,11 +37,18 @@ Needs Helm 4, Python 3 with PyYAML (for the render checks), and Docker.
 make test     # helm lint, render the chart with and without a license and check it
 make build    # build the deployer image for linux/amd64
 make verify   # run `mpdev verify` with the built image on the current cluster
+make verify-kind  # the same on a new kind cluster, deleted after the run
 ```
 
-`make verify` runs the same check as Google's verification: install with the test values and no license, run the tester, delete the app and check that nothing is left. It needs [`mpdev`](https://github.com/GoogleCloudPlatform/marketplace-k8s-app-tools/blob/master/docs/tool-prerequisites.md), the Application CRD in the cluster (`mpdev crd/install`), and the image pushed to a registry the cluster can pull from (`docker push` of the `make build` image).
+`make verify` runs the same check as Google's verification: install with the test values and no license, run the tester, delete the app and check that nothing is left. It needs [`mpdev`](https://github.com/GoogleCloudPlatform/marketplace-k8s-app-tools/blob/master/docs/tool-prerequisites.md), the [Application CRD](https://github.com/GoogleCloudPlatform/marketplace-k8s-app-tools/blob/master/crd/app-crd.yaml) in the cluster, and the image pushed to a registry the cluster can pull from (`docker push` of the `make build` image).
 
-Pulling the base image from `gcr.io` needs a Google login: `gcloud auth configure-docker gcr.io`.
+`make verify-kind` needs only Docker and [kind](https://kind.sigs.k8s.io/): it creates a cluster with a local registry, installs the Application CRD, runs `mpdev verify` from its image and deletes the cluster (`KEEP_CLUSTER=true` keeps it).
+
+Pulling the base image and `mpdev` from `gcr.io` needs a Google login: `gcloud auth configure-docker gcr.io`.
+
+## CI
+
+Every pull request runs `make test`. When the repo has a Google login set up for GitHub Actions (the `GCP_WORKLOAD_IDENTITY_PROVIDER` and `GCP_SERVICE_ACCOUNT` variables, for Workload Identity Federation), it also runs `make build` and `make verify-kind`.
 
 ## Versions
 
