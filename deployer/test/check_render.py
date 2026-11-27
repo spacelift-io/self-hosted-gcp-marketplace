@@ -8,6 +8,7 @@ what it found; the script exits 1 if any check fails.
 """
 
 import argparse
+import itertools
 import sys
 import urllib.parse
 
@@ -115,6 +116,24 @@ def check(form, render):
         yield hosts == [domain], f"Ingress {o['metadata']['name']} serves {hosts}"
 
 
+TRACKING_LABEL = ("goog-partner-solution", "isol_plb32_001kf00001dgv6liav_j4ogkpsbgbi4elkodchyxrpwapwswpd")
+
+
+def check_pods(render):
+    """Every Pod has Google's tracking label, and requests and limits on every container."""
+    key, value = TRACKING_LABEL
+    for o in render.of_kind("Deployment"):
+        name = o["metadata"]["name"]
+        labels = o["spec"]["template"]["metadata"].get("labels", {})
+        yield labels.get(key) == value, f"Deployment {name} Pods have the label {key}"
+        pod = o["spec"]["template"]["spec"]
+        for c in pod.get("initContainers", []) + pod["containers"]:
+            resources = c.get("resources", {})
+            for kind in ("requests", "limits"):
+                set_ = resources.get(kind, {})
+                yield "cpu" in set_ and "memory" in set_, f"Deployment {name} container {c['name']} has cpu and memory {kind}"
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--form", required=True)
@@ -124,7 +143,8 @@ def main():
     with open(args.form) as f:
         form = yaml.safe_load(f)
     failed = 0
-    for ok, message in check(form, Render(args.rendered)):
+    render = Render(args.rendered)
+    for ok, message in itertools.chain(check(form, render), check_pods(render)):
         print(f"  {'ok  ' if ok else 'FAIL'} {message}")
         failed += not ok
     return 1 if failed else 0

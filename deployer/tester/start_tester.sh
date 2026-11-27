@@ -9,7 +9,9 @@
 # run_tester.py applies the Pod, waits for it to finish and prints its log; a
 # failed Pod fails the deploy, and with it `mpdev verify`.
 #
-# The Application owns the Pod, so deleting the app removes it.
+# The Application owns the Pod, so deleting the app removes it. Like every Pod
+# of the app, it has Google's tracking label (the same value as in the chart's
+# values.yaml) and resource requests and limits.
 
 set -euo pipefail
 
@@ -33,6 +35,7 @@ metadata:
   labels:
     app.kubernetes.io/name: ${NAME}
     app.kubernetes.io/component: tester
+    goog-partner-solution: isol_plb32_001kf00001dgv6liav_j4ogkpsbgbi4elkodchyxrpwapwswpd
   annotations:
     marketplace.cloud.google.com/verification: test
   ownerReferences:
@@ -48,6 +51,13 @@ spec:
     - name: tester
       image: ${image}
       command: ["/bin/check_placeholder.sh"]
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 200m
+          memory: 128Mi
       env:
         - name: NAME
           value: ${NAME}
