@@ -3,6 +3,7 @@
 #   make test     lint the chart, then render it with and without a license
 #   make build    build the deployer image for linux/amd64
 #   make verify   run `mpdev verify` with the built image on the current cluster
+#   make verify-kind  the same on a new kind cluster, deleted after the run (CI)
 #
 # Needs: helm 4, python3 with PyYAML (for the render checks), docker (for build).
 
@@ -13,7 +14,7 @@ DEPLOYER_IMAGE ?= $(REGISTRY)/deployer:$(VERSION)
 PYTHON   ?= python3
 BUILD    := build
 
-.PHONY: test deps lint template build verify
+.PHONY: test deps lint template build verify verify-kind
 
 test: lint template
 
@@ -88,3 +89,8 @@ build:
 # pushed to a registry the cluster can pull from.
 verify:
 	mpdev verify --deployer=$(DEPLOYER_IMAGE)
+
+# The same check on a new kind cluster with a local registry; needs kind and
+# a login to gcr.io. CI runs this on every pull request.
+verify-kind:
+	deployer/test/kind-verify.sh $(DEPLOYER_IMAGE)
