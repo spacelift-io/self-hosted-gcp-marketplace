@@ -1,0 +1,14 @@
+{{- if not .Values.installSpacelift }}
+# Installed instead of Spacelift when no license is given.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-placeholder
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "spacelift-mp.labels" . | nindent 4 }}
+data:
+  README: >-
+    No Spacelift license was given, so only this placeholder is installed.
+    Deploy again with a license to install Spacelift.
+{{- end }}

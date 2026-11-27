@@ -1,0 +1,9 @@
+{{- /*
+Checks that stop an install or upgrade before it changes anything. This file
+renders no objects.
+*/ -}}
+
+{{- /* The chart doesn't create a service account, so the pods need the one from the form. */ -}}
+{{- if .Values.installSpacelift }}
+{{- $_ := include "spacelift-mp.required" (list .Values.spacelift.serviceAccount.name "spacelift.serviceAccount.name") }}
+{{- end }}

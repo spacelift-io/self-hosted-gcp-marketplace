@@ -1,0 +1,114 @@
+# Values of the spacelift-mp chart.
+#
+# The top-level keys below (license, registry, storage, ...) are the fields of
+# the Marketplace install form (deployer/schema.yaml). The deployer passes the
+# form to Helm as a values file.
+#
+# Everything under `spacelift:` goes to the spacelift-self-hosted chart. See
+# its values: https://github.com/spacelift-io/spacelift-self-hosted-helm-chart
+# The form fills some of them too: the service account, the domain
+# (spacelift.shared.serverHostname) and the Cloud SQL connection name.
+
+license:
+  token: ""
+
+registry:
+  server: oci.spacelift.io
+  username: spacelift
+  password: ""
+  # Name of the image pull secret this chart creates from the values above.
+  pullSecretName: spacelift-registry
+
+encryption:
+  rsaPrivateKey: ""
+
+database:
+  name: ""
+  user: ""
+
+storage:
+  buckets:
+    deliveries: ""
+    largeQueueMessages: ""
+    metadata: ""
+    modules: ""
+    policyInputs: ""
+    runLogs: ""
+    runObservability: ""
+    states: ""
+    uploads: ""
+    userUploadedWorkspaces: ""
+    workspace: ""
+
+# The two Ingresses of the server (templates/ingress.yaml). This chart renders
+# them instead of the spacelift-self-hosted chart, because the GKE settings
+# below are annotations whose keys can't be form field names.
+ingress:
+  # Names of the global static IP addresses the GKE load balancers use.
+  ipv4AddressName: ""
+  ipv6AddressName: ""
+  # The cert-manager ClusterIssuer for the TLS certificate. Empty: the
+  # certificate is managed in another way and must be in the Secret `cert`.
+  clusterIssuer: letsencrypt-prod
+
+admin:
+  username: ""
+  password: ""
+
+# Concurrency of the drain queues, per drain pod.
+drain:
+  concurrency:
+    asyncJobs: 1
+    asyncJobsFifo: 1
+    cronjobs: 1
+    dlq: 1
+    dlqFifo: 1
+    events: 1
+    iot: 1
+    webhooks: 1
+
+# Values of the image at the root of the Marketplace repository, filled in by
+# Marketplace. Not deployed: the Spacelift images come from oci.spacelift.io.
+rootImage:
+  repository: ""
+  tag: ""
+
+# Set by the deployer (deploy.sh): false when no license is given. Then only a
+# placeholder is installed instead of Spacelift.
+installSpacelift: true
+
+spacelift:
+  shared:
+    secretRef: spacelift-shared
+    imagePullSecrets:
+      - name: spacelift-registry
+    launcherImage:
+      enabled: true
+
+  server:
+    secretRef: spacelift-server
+
+  drain:
+    secretRef: spacelift-drain
+
+  # Marketplace creates or picks the service account (the form field
+  # spacelift.serviceAccount.name); the chart must not create one. The empty
+  # name replaces the chart's default "spacelift-backend", so an empty form
+  # field fails the install (checks.yaml) instead of using another account.
+  serviceAccount:
+    create: false
+    name: ""
+
+  cloudSqlProxy:
+    enabled: true
+    quiet: true
+
+  # fullnameOverride is not set here: the deployer sets it to the install
+  # name, so the chart's objects are <name>-server, <name>-mqtt, ... The
+  # chart's own default is "spacelift".
+
+  # Rendered by this chart instead, see `ingress` above.
+  ingress:
+    enabled: false
+  ingressV6:
+    enabled: false

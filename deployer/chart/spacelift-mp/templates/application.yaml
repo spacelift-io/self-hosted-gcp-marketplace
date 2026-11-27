@@ -1,0 +1,64 @@
+{{- /*
+The Application resource: what the GKE console shows on the Applications page.
+Marketplace creates it before the deployer runs; the deployer then hands it
+over to Helm.
+*/ -}}
+apiVersion: app.k8s.io/v1beta1
+kind: Application
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "spacelift-mp.labels" . | nindent 4 }}
+  annotations:
+    # deploy.sh makes the Application the owner of every object of the release,
+    # so deleting it deletes the whole install. Helm must never delete it on its
+    # own, for example in a `helm upgrade` with a chart that has no Application.
+    helm.sh/resource-policy: keep
+    marketplace.cloud.google.com/deploy-info: '{"partner_id": "spacelift-public", "product_id": "spacelift-gcp-kubernetes-byol", "partner_name": "Spacelift"}'
+spec:
+  descriptor:
+    type: Spacelift
+    version: {{ .Chart.Version | quote }}
+    description: >-
+      Spacelift is an infrastructure orchestration platform for Terraform,
+      OpenTofu, Pulumi, CloudFormation, Kubernetes and Ansible. This is the
+      self-hosted edition, running in your own GKE cluster.
+    maintainers:
+      - name: Spacelift
+        url: https://spacelift.io
+    links:
+      - description: Documentation
+        url: https://docs.spacelift.io
+      {{- if and .Values.installSpacelift .Values.spacelift.shared.serverHostname }}
+      - description: Spacelift
+        url: https://{{ .Values.spacelift.shared.serverHostname }}
+      {{- end }}
+    {{- if not .Values.installSpacelift }}
+    notes: >-
+      No Spacelift license was given, so only a placeholder is installed.
+      To install Spacelift, delete this app and deploy it again with a license.
+    {{- end }}
+  # The spacelift-self-hosted chart labels each part with its own instance
+  # name: <name>, <name>-drain, <name>-vcs-gateway.
+  selector:
+    matchExpressions:
+      - key: app.kubernetes.io/instance
+        operator: In
+        values:
+          - {{ .Release.Name }}
+          - {{ .Release.Name }}-drain
+          - {{ .Release.Name }}-vcs-gateway
+  componentKinds:
+    - group: apps
+      kind: Deployment
+    - group: ""
+      kind: Service
+    - group: networking.k8s.io
+      kind: Ingress
+    - group: ""
+      kind: Secret
+    - group: ""
+      kind: ConfigMap
+    - group: policy
+      kind: PodDisruptionBudget

@@ -1,0 +1,53 @@
+{{- /*
+The two Ingresses of the Spacelift server, one per static IP: a GKE load
+balancer has one IP address. They match the Ingresses of the
+spacelift-self-hosted chart, which this chart turns off (values.yaml), plus the
+GKE annotations from the form. The form can't set those annotations on the
+chart's Ingresses: their keys contain dots, and the form splits field names
+on dots.
+
+cert-manager watches only the IPv6 Ingress: both Ingresses use the same
+certificate Secret, so issuing it once is enough.
+*/ -}}
+{{- if .Values.installSpacelift }}
+{{- $host := include "spacelift-mp.required" (list .Values.spacelift.shared.serverHostname "spacelift.shared.serverHostname") }}
+{{- /* Named the same way as the server Service of the spacelift-self-hosted chart. */}}
+{{- $service := printf "%s-server" (include "spacelift.fullname" .Subcharts.spacelift) }}
+{{- range $ingress := list
+      (dict "name" "server-v4" "ipName" $.Values.ingress.ipv4AddressName "ipField" "ingress.ipv4AddressName" "path" "/" "pathType" "Prefix" "certManager" false)
+      (dict "name" "server-v6" "ipName" $.Values.ingress.ipv6AddressName "ipField" "ingress.ipv6AddressName" "path" "/*" "pathType" "ImplementationSpecific" "certManager" true) }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $ingress.name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "spacelift-mp.labels" $ | nindent 4 }}
+  annotations:
+    {{- /* Without it, GKE ignores the Ingress when the cluster has a default IngressClass. */}}
+    kubernetes.io/ingress.class: gce
+    kubernetes.io/ingress.global-static-ip-name: {{ include "spacelift-mp.required" (list $ingress.ipName $ingress.ipField) | quote }}
+    {{- if and $ingress.certManager $.Values.ingress.clusterIssuer }}
+    cert-manager.io/cluster-issuer: {{ $.Values.ingress.clusterIssuer | quote }}
+    {{- /* Solve the HTTP-01 challenge on this Ingress. A separate solver Ingress would get its own load balancer and IP, which the domain doesn't point to. */}}
+    acme.cert-manager.io/http01-edit-in-place: "true"
+    {{- end }}
+spec:
+  tls:
+    - hosts:
+        - {{ $host | quote }}
+      secretName: cert
+  rules:
+    - host: {{ $host | quote }}
+      http:
+        paths:
+          - path: {{ $ingress.path }}
+            pathType: {{ $ingress.pathType }}
+            backend:
+              service:
+                name: {{ $service }}
+                port:
+                  name: server
+{{- end }}
+{{- end }}

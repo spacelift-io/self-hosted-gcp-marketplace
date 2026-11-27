@@ -1,0 +1,10 @@
+# The install form without a license, for local checks (make test).
+name: spacelift
+namespace: spacelift
+license:
+  token: ""
+spacelift:
+  serviceAccount:
+    name: spacelift-backend
+  shared:
+    serverHostname: spacelift.example.com

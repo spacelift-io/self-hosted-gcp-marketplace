@@ -1,0 +1,40 @@
+# A filled-in install form with fake values, for local checks (make test).
+name: spacelift
+namespace: spacelift
+license:
+  token: test-license-token
+registry:
+  username: spacelift
+  password: test-registry-password
+encryption:
+  rsaPrivateKey: dGVzdC1yc2Eta2V5
+database:
+  name: spacelift
+  user: spacelift-backend@test-project.iam.gserviceaccount.com
+storage:
+  buckets:
+    deliveries: test-deliveries
+    largeQueueMessages: test-large-queue-messages
+    metadata: test-metadata
+    modules: test-modules
+    policyInputs: test-policy-inputs
+    runLogs: test-run-logs
+    runObservability: test-run-observability
+    states: test-states
+    uploads: test-uploads
+    userUploadedWorkspaces: test-user-uploaded-workspaces
+    workspace: test-workspace
+ingress:
+  ipv4AddressName: spacelift-gke-public-v4-test
+  ipv6AddressName: spacelift-gke-public-v6-test
+  clusterIssuer: letsencrypt-prod
+admin:
+  username: admin
+  password: test-admin-password
+spacelift:
+  serviceAccount:
+    name: spacelift-backend
+  shared:
+    serverHostname: spacelift.example.com
+  cloudSqlProxy:
+    dbConnectionName: test-project:us-central1:spacelift-db
