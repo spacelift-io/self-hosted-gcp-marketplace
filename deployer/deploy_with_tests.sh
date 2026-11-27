@@ -4,7 +4,7 @@
 #
 # Replaces /bin/deploy_with_tests.sh of Google's deployer_helm image. It puts
 # the test values from /data-test over the form, then runs the same install as
-# a real deploy (deploy.sh) and waits for the app to be ready.
+# a real deploy (deploy.sh), waits for the app to be ready and runs the tester.
 
 set -euo pipefail
 

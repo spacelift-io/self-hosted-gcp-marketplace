@@ -23,6 +23,8 @@ deployer/
   deploy.sh              the install script (replaces Google's /bin/deploy.sh)
   deploy_with_tests.sh   the test install that `mpdev verify` runs
   chart/spacelift-mp/    wrapper chart around spacelift-self-hosted; renders the GKE Ingresses
+  data-test/schema.yaml  test values for the form, used only by the test install
+  tester/                the tester of the test install: checks the placeholder
   test/                  install forms with fake values for local checks
   hack/                  temporary build fixes, each one says when to remove it
 ```
@@ -34,7 +36,10 @@ Needs Helm 4, Python 3 with PyYAML (for the render checks), and Docker.
 ```shell
 make test     # helm lint, render the chart with and without a license and check it
 make build    # build the deployer image for linux/amd64
+make verify   # run `mpdev verify` with the built image on the current cluster
 ```
+
+`make verify` runs the same check as Google's verification: install with the test values and no license, run the tester, delete the app and check that nothing is left. It needs [`mpdev`](https://github.com/GoogleCloudPlatform/marketplace-k8s-app-tools/blob/master/docs/tool-prerequisites.md), the Application CRD in the cluster (`mpdev crd/install`), and the image pushed to a registry the cluster can pull from (`docker push` of the `make build` image).
 
 Pulling the base image from `gcr.io` needs a Google login: `gcloud auth configure-docker gcr.io`.
 
