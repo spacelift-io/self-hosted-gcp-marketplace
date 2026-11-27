@@ -1,0 +1,53 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "semanticCommits": "enabled",
+  "dependencyDashboard": {
+    "enabled": false
+  },
+  "packageRules": [
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Action versions"
+    },
+    {
+      "description": "One PR per Self-Hosted release: the chart dependency, Chart.lock and the listing version move together. Merged by Renovate once the PR checks pass.",
+      "matchDepNames": ["spacelift-self-hosted"],
+      "groupName": "Spacelift Self-Hosted",
+      "versioning": "semver",
+      "allowedVersions": "/^\\d+\\.\\d+\\.\\d+$/",
+      "commitMessageTopic": "Spacelift Self-Hosted",
+      "semanticCommitType": "feat",
+      "semanticCommitScope": "release",
+      "automerge": true,
+      "platformAutomerge": false
+    },
+    {
+      "description": "Google's Marketplace tools on gcr.io need a Google login to look up, so they are updated by hand",
+      "matchPackageNames": ["gcr.io/cloud-marketplace-tools/**"],
+      "enabled": false
+    }
+  ],
+  "customManagers": [
+    {
+      "description": "The listing version in Chart.yaml follows the spacelift-self-hosted version. A -gcp.N suffix (a deployer-only release) is dropped on the next Self-Hosted release.",
+      "customType": "regex",
+      "managerFilePatterns": ["/^deployer/chart/spacelift-mp/Chart\\.yaml$/"],
+      "matchStrings": ["\\nversion: (?<currentValue>\\d+\\.\\d+\\.\\d+)(?:-gcp\\.\\d+)?\\n"],
+      "autoReplaceStringTemplate": "\nversion: {{{newValue}}}\n",
+      "datasourceTemplate": "helm",
+      "registryUrlTemplate": "https://downloads.spacelift.io/helm",
+      "depNameTemplate": "spacelift-self-hosted"
+    },
+    {
+      "description": "appVersion in Chart.yaml, the same way as the version above",
+      "customType": "regex",
+      "managerFilePatterns": ["/^deployer/chart/spacelift-mp/Chart\\.yaml$/"],
+      "matchStrings": ["\\nappVersion: \"(?<currentValue>\\d+\\.\\d+\\.\\d+)(?:-gcp\\.\\d+)?\"\\n"],
+      "autoReplaceStringTemplate": "\nappVersion: \"{{{newValue}}}\"\n",
+      "datasourceTemplate": "helm",
+      "registryUrlTemplate": "https://downloads.spacelift.io/helm",
+      "depNameTemplate": "spacelift-self-hosted"
+    }
+  ]
+}
