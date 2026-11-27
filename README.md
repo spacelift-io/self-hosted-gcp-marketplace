@@ -50,6 +50,8 @@ Pulling the base image and `mpdev` from `gcr.io` needs a Google login: `gcloud a
 
 Every pull request runs `make test`. When the repo has a Google login set up for GitHub Actions (the `GCP_WORKLOAD_IDENTITY_PROVIDER` and `GCP_SERVICE_ACCOUNT` variables, for Workload Identity Federation), it also runs `make build` and `make verify-kind`.
 
+[Renovate](https://docs.renovatebot.com/) (`.github/renovate.json`, run by `.github/workflows/renovate.yaml`) opens a pull request when a new `spacelift-self-hosted` chart is released. The pull request moves the chart dependency, `Chart.lock`, `version` and `appVersion` to the new Self-Hosted version, and Renovate merges it once the checks pass. It also keeps the GitHub Actions up to date. Google's images on `gcr.io/cloud-marketplace-tools` are updated by hand.
+
 ## Versions
 
 The version of a release follows the Spacelift Self-Hosted version it installs, without the `v` (`7.2.0`). A change to the deployer alone adds `-gcp.N` (`7.2.0-gcp.1`). The version is set in `deployer/chart/spacelift-mp/Chart.yaml`.

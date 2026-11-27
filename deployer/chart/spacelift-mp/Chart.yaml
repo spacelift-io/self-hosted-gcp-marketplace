@@ -3,7 +3,8 @@ name: spacelift-mp
 description: Spacelift Self-Hosted for Google Cloud Marketplace. Wraps the spacelift-self-hosted chart.
 type: application
 # The release version of the Marketplace listing. It follows the Spacelift
-# Self-Hosted version; a change to the deployer alone adds -gcp.N.
+# Self-Hosted version; a change to the deployer alone adds -gcp.N. Renovate
+# moves version, appVersion and the dependency below together.
 version: 7.2.0
 appVersion: "7.2.0"
 home: https://spacelift.io

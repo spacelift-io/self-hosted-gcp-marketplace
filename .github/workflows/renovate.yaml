@@ -1,0 +1,40 @@
+name: Renovate
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/20 9-16 * * 1-5'
+      timezone: 'Europe/Warsaw'
+
+concurrency:
+  group: renovate
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  renovate:
+    name: Renovate
+    runs-on: ubuntu-latest
+    # Runs once the GitHub App that Renovate acts as is set up for this repo.
+    if: vars.RENOVATE_APP_CLIENT_ID != ''
+    steps:
+      - name: Generate token
+        id: generate_token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.RENOVATE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RENOVATE_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+
+      - name: Check out repository code
+        uses: actions/checkout@v7
+
+      - name: Run Renovate
+        uses: renovatebot/github-action@v47.0.0
+        with:
+          token: ${{ steps.generate_token.outputs.token }}
+        env:
+          RENOVATE_REPOSITORIES: ${{ github.repository }}
