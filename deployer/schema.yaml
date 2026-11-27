@@ -173,15 +173,21 @@ properties:
       empty if you manage the certificate in another way.
     default: letsencrypt-prod
 
+  # The form can't require the admin fields: an install without a license (the
+  # placeholder) doesn't need them, same as the encryption key and the registry
+  # password. So the chart requires them for a licensed install only
+  # (templates/secrets.yaml).
   admin.username:
     type: string
-    title: Admin username (optional)
-    description: Creates an admin login for the first sign-in. Leave empty to set up SSO instead.
+    title: Admin username
+    description: >-
+      The admin login for the first sign-in, needed to set up SSO. Required
+      with a license. You can remove it after SSO is set up.
     default: ""
 
   admin.password:
     type: string
-    title: Admin password (optional)
+    title: Admin password
     default: ""
     x-google-marketplace:
       type: MASKED_FIELD

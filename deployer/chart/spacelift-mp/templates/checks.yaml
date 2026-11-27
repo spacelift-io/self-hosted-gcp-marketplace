@@ -3,16 +3,6 @@ Checks that stop an install or upgrade before it changes anything. This file
 renders no objects.
 */ -}}
 
-{{- /*
-The Secrets and Ingresses of this chart address the spacelift-self-hosted
-chart's Services as <install name>-mqtt and <install name>-server. That holds
-only when its fullnameOverride is the install name; deploy.sh sets it.
-*/ -}}
-{{- $fullname := .Values.spacelift.fullnameOverride }}
-{{- if and .Values.installSpacelift (ne $fullname .Release.Name) }}
-{{- fail (printf "spacelift.fullnameOverride is %q, but must be the install name %q. Pass --set spacelift.fullnameOverride=%s, as the deployer does." $fullname .Release.Name .Release.Name) }}
-{{- end }}
-
 {{- /* The chart doesn't create a service account, so the pods need the one from the form. */ -}}
 {{- if .Values.installSpacelift }}
 {{- $_ := include "spacelift-mp.required" (list .Values.spacelift.serviceAccount.name "spacelift.serviceAccount.name") }}

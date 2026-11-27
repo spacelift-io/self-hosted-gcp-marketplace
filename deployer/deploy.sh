@@ -27,9 +27,34 @@ NAMESPACE="$(/bin/print_config.py --xtype NAMESPACE --values_mode raw)"
 export NAME NAMESPACE
 
 STEP="startup"
+
+# Makes the Application the owner of every object of the release and of Helm's
+# release Secrets, which hold the form values. Deleting the app then removes
+# everything, license included.
+set_owner() {
+  local owner_patch
+  owner_patch="$(printf '{"metadata":{"ownerReferences":[{"apiVersion":"%s","kind":"Application","name":"%s","uid":"%s","blockOwnerDeletion":true}]}}' \
+    "${app_api_version}" "${NAME}" "${app_uid}")"
+  {
+    helm get manifest "${NAME}" --namespace "${NAMESPACE}" \
+      | kubectl get --namespace "${NAMESPACE}" --filename - --output name
+    # Helm keeps every revision, with the form values, in these Secrets.
+    kubectl get secrets --namespace "${NAMESPACE}" --selector "owner=helm,name=${NAME}" --output name
+  } | grep -v '^application\.app\.k8s\.io/' | while read -r object; do
+    kubectl patch "${object}" --namespace "${NAMESPACE}" --type merge --patch "${owner_patch}" >/dev/null
+    echo "  owned by the Application: ${object}"
+  done
+}
+
 handle_failure() {
   code=$?
   echo "ERROR: the deployer failed at step \"${STEP}\" (exit code ${code})" >&2
+  # A failed install can leave a release Secret and some objects behind: they
+  # get the owner too, so deleting the app still removes them.
+  if [[ -n "${app_uid:-}" && -n "${app_api_version:-}" ]]; then
+    echo "Setting the owner of what the failed install left behind"
+    set_owner || true
+  fi
   patch_assembly_phase.sh --status="Failed" || true
   exit "${code}"
 }
@@ -50,9 +75,8 @@ version="$(/bin/print_published_version.py)"
 
 # Name the spacelift-self-hosted chart's objects after the install:
 # <name>-server, <name>-mqtt, ... The chart's default fullnameOverride is
-# "spacelift", so without this every install would get spacelift-* objects,
-# while this chart addresses them as <name>-*. A values file can't set it: it
-# has no templates.
+# "spacelift", so without this every install would get spacelift-* objects.
+# A values file can't set it: it has no templates.
 helm_args=(--set-string "spacelift.fullnameOverride=${NAME}")
 # The chart installs Spacelift on the condition installSpacelift, which must be
 # a boolean, so the license can't be the condition itself.
@@ -89,17 +113,7 @@ helm upgrade --install "${NAME}" "${CHART_DIR}" \
 rm -rf "${work_dir}"
 
 STEP="set the owner of the release objects"
-owner_patch="$(printf '{"metadata":{"ownerReferences":[{"apiVersion":"%s","kind":"Application","name":"%s","uid":"%s","blockOwnerDeletion":true}]}}' \
-  "${app_api_version}" "${NAME}" "${app_uid}")"
-{
-  helm get manifest "${NAME}" --namespace "${NAMESPACE}" \
-    | kubectl get --namespace "${NAMESPACE}" --filename - --output name
-  # Helm keeps every revision, with the form values, in these Secrets.
-  kubectl get secrets --namespace "${NAMESPACE}" --selector "owner=helm,name=${NAME}" --output name
-} | grep -v '^application\.app\.k8s\.io/' | while read -r object; do
-  kubectl patch "${object}" --namespace "${NAMESPACE}" --type merge --patch "${owner_patch}" >/dev/null
-  echo "  owned by the Application: ${object}"
-done
+set_owner
 
 STEP="mark the Application as ready"
 patch_assembly_phase.sh --status="Success"

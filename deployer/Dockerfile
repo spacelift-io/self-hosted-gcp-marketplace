@@ -31,6 +31,7 @@ COPY deployer/chart/spacelift-mp /data/chart/spacelift-mp
 # Temporary, see the script: allows `global` in the dependency's values schema.
 COPY deployer/hack/allow-global-in-chart-schema.py /tmp/allow-global-in-chart-schema.py
 RUN helm repo add spacelift https://downloads.spacelift.io/helm \
+    && helm repo update spacelift \
     && helm dependency build /data/chart/spacelift-mp \
     && helm repo remove spacelift \
     && python3 /tmp/allow-global-in-chart-schema.py /data/chart/spacelift-mp/charts/spacelift-self-hosted-*.tgz \

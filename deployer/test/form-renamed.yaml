@@ -29,8 +29,8 @@ ingress:
   ipv6AddressName: spacelift-gke-public-v6-test
   clusterIssuer: letsencrypt-prod
 admin:
-  username: ""
-  password: ""
+  username: admin
+  password: test-admin-password
 spacelift:
   serviceAccount:
     name: spacelift-backend

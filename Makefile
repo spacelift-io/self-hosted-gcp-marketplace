@@ -59,9 +59,10 @@ template: $(BUILD)/full.yaml $(BUILD)/renamed.yaml $(BUILD)/placeholder.yaml $(B
 	@test "$$(grep -c 'kubernetes.io/ingress.global-static-ip-name' $(BUILD)/no-issuer.yaml)" = 2
 	@! grep -qE 'cert-manager.io/cluster-issuer|http01-edit-in-place' $(BUILD)/no-issuer.yaml
 	@echo "  ok"
-	@echo "Without fullnameOverride = the install name: the chart refuses to render."
-	@! helm template sl-prod $(CHART) --namespace tools --values deployer/test/form-renamed.yaml >/dev/null 2>$(BUILD)/no-fullname.err
-	@grep -q 'must be the install name' $(BUILD)/no-fullname.err
+	@echo "Without the admin login in the form: the chart refuses to render."
+	@! helm template spacelift $(CHART) --namespace spacelift --values deployer/test/form-full.yaml \
+		$(call deploy_flags,deployer/test/form-full.yaml) --set-string admin.password= >/dev/null 2>$(BUILD)/no-admin.err
+	@grep -q 'admin.password' $(BUILD)/no-admin.err
 	@echo "  ok"
 	@echo "Without a service account in the form: the chart refuses to render."
 	@! helm template spacelift $(CHART) --namespace spacelift --values deployer/test/form-full.yaml \

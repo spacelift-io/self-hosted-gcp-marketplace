@@ -10,7 +10,7 @@ Spacelift Self-Hosted on Marketplace is "bring your own license": you get a lice
 2. The customer creates a Kubernetes service account annotated for Workload Identity, installs cert-manager, and fills in the Marketplace form with the Terraform outputs, the license and the registry credentials.
 3. Marketplace runs the deployer image as a Job in the cluster. The deployer installs the `spacelift-mp` chart with `helm upgrade --install`, so the app is a regular Helm release.
 
-The deployer makes the Application the owner of every object of the install, so deleting the app in the GKE console removes everything.
+The deployer makes the Application the owner of every object of the install, so deleting the app in the GKE console removes everything. This also covers what a failed install leaves behind. Objects created by a later `helm upgrade` run by hand don't get the owner yet.
 
 Without a license, the deployer installs only a placeholder: the Application resource and a ConfigMap.
 
